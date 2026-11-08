@@ -88,10 +88,10 @@ const CHAIN_RPC: Record<number, string> = {
 };
 
 function getWsBaseUrl(): string {
-  if (typeof window === "undefined") return "wss://faucetdrop-backend.vercel.app";
+  if (typeof window === "undefined") return "wss://faucetdrops-backend.vercel.app";
   return window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
     ? "ws://127.0.0.1:8000"
-    : "wss://faucetdrop-backend.vercel.app";
+    : "wss://faucetdrops-backend.vercel.app";
 }
 
 // ── Types ──

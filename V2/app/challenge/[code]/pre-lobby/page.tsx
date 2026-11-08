@@ -42,7 +42,7 @@ function getWsBase() {
   if (typeof window === "undefined") return "wss://127.0.0.1:8000";
   return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "ws://127.0.0.1:8000"
-    : "wss://challenge-backend-eta.vercel.app";
+    : "wss://challenge-backend-nine.vercel.app";
 }
 
 function fmt(n: number) {
