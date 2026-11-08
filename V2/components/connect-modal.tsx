@@ -1,0 +1,567 @@
+"use client"
+
+import { useState, useEffect, useRef, useCallback } from "react"
+import { createPortal } from "react-dom"
+import { useWallet, type SocialProvider, API_BASE, openOAuthPopup } from "./wallet-provider"
+import { X, Loader2, ChevronRight, Shield, Fingerprint } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { createClient } from "@supabase/supabase-js"
+import { toast } from "sonner"
+
+
+
+// Wherever you create the supabase client used for auth
+// At the top of connect-modal.tsx, change the supabase client:
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Brand icons
+// ─────────────────────────────────────────────────────────────────────────────
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.69-2.26 1.1-3.71 1.1-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.14A6.6 6.6 0 0 1 5.5 12c0-.74.13-1.46.34-2.14V7.02H2.18A10.99 10.99 0 0 0 1 12c0 1.77.43 3.45 1.18 4.98l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.02l3.66 2.84c.87-2.6 3.3-4.48 6.16-4.48z" fill="#EA4335"/>
+    </svg>
+  )
+}
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  )
+}
+
+function GithubIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.9.57.1.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.02 1.75 2.68 1.25 3.33.95.1-.74.39-1.25.71-1.54-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.41-5.27 5.69.41.36.78 1.07.78 2.16 0 1.56-.01 2.81-.01 3.19 0 .3.21.66.79.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/>
+    </svg>
+  )
+}
+
+function DiscordIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20.32 4.74A19.8 19.8 0 0 0 15.87 3.3c-.2.36-.43.85-.59 1.24a18.3 18.3 0 0 0-5.56 0 8.4 8.4 0 0 0-.6-1.24 19.9 19.9 0 0 0-4.45 1.44C2.1 8.4 1.42 12 1.74 15.55a19.9 19.9 0 0 0 5.06 2.62c.41-.57.77-1.18 1.08-1.82a13 13 0 0 1-1.7-.84c.14-.11.28-.22.41-.34a13.9 13.9 0 0 0 11.82 0c.14.12.28.23.41.34-.54.32-1.11.6-1.7.84.31.64.67 1.25 1.08 1.82a19.9 19.9 0 0 0 5.06-2.62c.38-4.1-.62-7.66-2.94-10.81zM8.68 13.4c-.83 0-1.5-.78-1.5-1.74 0-.96.66-1.74 1.5-1.74s1.51.78 1.5 1.74c0 .96-.66 1.74-1.5 1.74zm6.64 0c-.83 0-1.5-.78-1.5-1.74 0-.96.66-1.74 1.5-1.74s1.51.78 1.5 1.74c0 .96-.66 1.74-1.5 1.74z"/>
+    </svg>
+  )
+}
+
+function TelegramIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 .5C5.65.5.5 5.65.5 12s5.15 11.5 11.5 11.5S23.5 18.35 23.5 12 18.35.5 12 .5zm5.4 7.86-1.83 8.63c-.14.62-.5.77-1 .48l-2.77-2.04-1.34 1.29c-.15.15-.27.27-.55.27l.2-2.79 5.09-4.6c.22-.2-.05-.31-.34-.11l-6.29 3.96-2.71-.85c-.59-.18-.6-.59.12-.87l10.6-4.09c.49-.18.92.12.82.72z"/>
+    </svg>
+  )
+}
+
+function FarcasterIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="20" height="20" rx="5" fill="#855DCD"/>
+      <path d="M6.5 7h11v2.2h-3.1V17h-2.2v-7.8H8.7V17H6.5V7z" fill="white"/>
+      <path d="M5.8 7h1.6l.4 1.8-.4 1.6H5.8z" fill="white"/>
+      <path d="M16.6 7h1.6v3.4l-.4 1.6h-1.2l-.4-1.6z" fill="white"/>
+    </svg>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SOCIALS: {
+  id: SocialProvider
+  label: string
+  Icon: (props: { className?: string }) => JSX.Element
+  color: string
+  bg: string
+}[] = [
+  { id: "google",    label: "Google",    Icon: GoogleIcon,    color: "#EA4335", bg: "rgba(234,67,53,0.08)"   },
+  { id: "twitter",   label: "Twitter/X", Icon: XIcon,         color: "#FFFFFF", bg: "rgba(255,255,255,0.08)" },
+  { id: "github",    label: "GitHub",    Icon: GithubIcon,    color: "#E5E5E5", bg: "rgba(255,255,255,0.10)" },
+  { id: "discord",   label: "Discord",   Icon: DiscordIcon,   color: "#5865F2", bg: "rgba(88,101,242,0.08)"  },
+  { id: "telegram",  label: "Telegram",  Icon: TelegramIcon,  color: "#2AABEE", bg: "rgba(42,171,238,0.08)"  },
+  { id: "farcaster", label: "Farcaster", Icon: FarcasterIcon, color: "#855DCD", bg: "rgba(133,93,205,0.08)"  },
+]
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ConnectModalProps {
+  onSuccess?: () => void
+}
+
+export function ConnectModal({ onSuccess }: ConnectModalProps) {
+  const {
+    showModal, setShowModal,
+    detectedWallets, connectExternalWallet, connectSocial,
+    isConnecting,
+  } = useWallet()
+
+  const [tab,                setTab]                = useState<"social" | "wallet">("social")
+  const [loadingId,          setLoadingId]          = useState<string | null>(null)
+  const [mounted,            setMounted]            = useState(false)
+  const [showTelegramWidget, setShowTelegramWidget] = useState(false)
+  const telegramContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => setMounted(true), [])
+
+  // Reset tab when modal opens
+  useEffect(() => {
+    if (showModal) setTab("social")
+  }, [showModal])
+
+  // ── Standard OAuth social login ───────────────────────────────────────────
+const handleSocial = useCallback(async (providerId: SocialProvider) => {
+  if (providerId === "passkey")   { handlePasskey();       return }
+  if (providerId === "telegram")  { handleTelegramPopup(); return }
+  if (providerId === "farcaster") { handleFarcaster();     return }
+
+  const SUPABASE_PROVIDER_MAP: Record<string, string> = {
+    google:  "google",
+    twitter: "x",
+    github:  "github",
+    discord: "discord",
+  }
+
+  const supabaseProvider = SUPABASE_PROVIDER_MAP[providerId as string]
+
+  setLoadingId(providerId)
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: supabaseProvider as any,
+      options: {
+        // ← pass the clicked provider in the redirect URL
+        redirectTo: `${window.location.origin}/auth/callback?provider=${providerId}`,
+        skipBrowserRedirect: false,
+      },
+    })
+    if (error) throw error
+  } catch (err: any) {
+    if (err?.message !== "cancelled") {
+      toast.error(err.message ?? `${providerId} login failed`)
+    }
+    setLoadingId(null)
+  }
+}, [])
+
+  // ── Telegram popup ────────────────────────────────────────────────────────
+  const handleTelegramPopup = useCallback(() => {
+    setLoadingId("telegram")
+
+    const popup = window.open(
+      "/auth/telegram",
+      "telegram_login",
+      "width=400,height=500,left=200,top=100",
+    )
+
+    const handler = async (e: MessageEvent) => {
+      if (e.data?.type !== "telegram_auth") return
+      window.removeEventListener("message", handler)
+      try {
+        await connectSocial("telegram", JSON.stringify(e.data.user))
+        onSuccess?.()
+      } catch (err) {
+        console.error("Telegram login failed:", err)
+      } finally {
+        setLoadingId(null)
+      }
+    }
+
+    window.addEventListener("message", handler)
+
+    const poll = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(poll)
+        window.removeEventListener("message", handler)
+        setLoadingId(null)
+      }
+    }, 500)
+  }, [connectSocial, onSuccess])
+
+  // ── Telegram inline widget (fallback) ────────────────────────────────────
+  useEffect(() => {
+    if (!showTelegramWidget) return
+
+    const timeout = setTimeout(() => {
+      if (!telegramContainerRef.current) return
+
+      ;(window as any).onTelegramAuth = async (telegramUser: Record<string, unknown>) => {
+        setLoadingId("telegram")
+        setShowTelegramWidget(false)
+        try {
+          await connectSocial("telegram", JSON.stringify(telegramUser))
+          onSuccess?.()
+        } catch (err: any) {
+          console.error("Telegram login failed:", err)
+        } finally {
+          setLoadingId(null)
+        }
+      }
+
+      const script = document.createElement("script")
+      script.src = "https://telegram.org/js/telegram-widget.js?22"
+      script.setAttribute("data-telegram-login", "FaucetDrops")
+      script.setAttribute("data-size", "large")
+      script.setAttribute("data-onauth", "onTelegramAuth(user)")
+      script.setAttribute("data-request-access", "write")
+      script.async = true
+      telegramContainerRef.current.appendChild(script)
+    }, 50)
+
+    return () => {
+      clearTimeout(timeout)
+      delete (window as any).onTelegramAuth
+      if (telegramContainerRef.current) telegramContainerRef.current.innerHTML = ""
+    }
+  }, [showTelegramWidget, connectSocial, onSuccess])
+
+  // ── Farcaster ─────────────────────────────────────────────────────────────
+  const handleFarcaster = useCallback(async () => {
+    setLoadingId("farcaster")
+    try {
+      const { createAppClient, viemConnector } = await import("@farcaster/auth-client")
+
+      const appClient = createAppClient({
+        relay:    "https://relay.farcaster.xyz",
+        ethereum: viemConnector(),
+      })
+
+      const nonce = crypto.randomUUID().replace(/-/g, "")
+
+      const { data: channel, isError: channelError } = await appClient.createChannel({
+        siweUri: window.location.origin,
+        domain:  window.location.hostname,
+        nonce,
+      })
+
+      if (channelError || !channel?.channelToken) {
+        throw new Error("Failed to create Farcaster channel")
+      }
+
+      const popup = window.open(
+        channel.url,
+        "farcaster_login",
+        "width=460,height=680,left=200,top=100",
+      )
+
+      await new Promise<void>((resolve, reject) => {
+        let settled = false
+
+        const settle = (err?: Error) => {
+          if (settled) return
+          settled = true
+          clearInterval(pollId)
+          clearInterval(closedPoll)
+          if (err) reject(err)
+          else resolve()
+        }
+
+        const pollId = setInterval(async () => {
+          try {
+            const { data: status, isError } = await appClient.watchStatus({
+              channelToken: channel.channelToken,
+            })
+            if (isError) { settle(new Error("Farcaster auth failed")); return }
+            if (status?.state === "completed") {
+              try { popup?.close() } catch {}
+              settle()
+              await connectSocial("farcaster", JSON.stringify({
+                fid:       status.fid,
+                message:   status.message,
+                signature: status.signature,
+              }))
+                            onSuccess?.()
+            }
+          } catch { /* keep polling */ }
+        }, 1500)
+
+        const closedPoll = setInterval(() => {
+          if (popup?.closed) settle(new Error("cancelled"))
+        }, 500)
+
+        setTimeout(() => {
+          try { popup?.close() } catch {}
+          settle(new Error("Farcaster sign-in timed out"))
+        }, 180_000)
+      })
+    } catch (err: any) {
+      if (err?.message !== "cancelled") console.error("Farcaster error:", err)
+    } finally {
+      setLoadingId(null)
+    }
+  }, [connectSocial, onSuccess])
+
+  // ── Passkey ───────────────────────────────────────────────────────────────
+  // Replace handlePasskey entirely:
+const handlePasskey = useCallback(async () => {
+  setLoadingId("passkey")
+  try {
+    // Use Supabase's native passkey flow — it handles WebAuthn internally
+    const { data, error } = await (supabase.auth as any).signInWithPasskey({})
+
+    if (error) {
+      // No passkey enrolled yet — register one
+      if (error.message?.includes("not found") || error.message?.includes("no credential")) {
+        const { data: regData, error: regError } = await (supabase.auth as any).enrollPasskey({})
+        if (regError) throw new Error(regError.message)
+        if (!regData?.session?.access_token) throw new Error("Passkey enrollment failed")
+        await connectSocial("passkey", regData.session.access_token, "supabase_token")
+      } else {
+        throw new Error(error.message)
+      }
+    } else {
+      if (!data?.session?.access_token) throw new Error("No session from passkey auth")
+      await connectSocial("passkey", data.session.access_token, "supabase_token")
+    }
+    onSuccess?.()
+  } catch (err: any) {
+    if (!err?.message?.includes("cancel")) {
+      toast.error(err?.message ?? "Passkey error")
+    }
+  } finally {
+    setLoadingId(null)
+  }
+}, [connectSocial, onSuccess])
+
+  // ── External wallet ───────────────────────────────────────────────────────
+  const handleExternalWallet = useCallback(async (wallet: typeof detectedWallets[number]) => {
+    setLoadingId(wallet.name)
+    try {
+      await connectExternalWallet(wallet)
+      onSuccess?.()
+    } finally {
+      setLoadingId(null)
+    }
+  }, [connectExternalWallet, onSuccess])
+
+  if (!showModal || !mounted) return null
+
+  const hasEthereum = typeof window !== "undefined" && !!(window as any)?.ethereum
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }}
+      onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}
+    >
+      <div
+        className="relative w-full max-w-[400px] overflow-hidden rounded-2xl"
+        style={{
+          background: "var(--modal-bg, #0f0f13)",
+          border:     "1px solid rgba(255,255,255,0.07)",
+          boxShadow:  "0 32px 80px rgba(0,0,0,0.6)",
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div>
+            <h2 className="text-base font-semibold text-white tracking-tight">Connect</h2>
+            <p className="text-xs text-white/40 mt-0.5">Sign in or connect your wallet</p>
+          </div>
+          <button
+            onClick={() => setShowModal(false)}
+            className="h-8 w-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Tab switcher */}
+        <div className="px-6 mb-4">
+          <div className="flex rounded-xl p-1" style={{ background: "rgba(255,255,255,0.05)" }}>
+            {(["social", "wallet"] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "flex-1 text-xs font-medium py-2 rounded-lg transition-all capitalize",
+                  tab === t ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70",
+                )}
+              >
+                {t === "social" ? "Social Login" : "Browser Wallet"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 pb-6 space-y-2">
+          {tab === "social" ? (
+            <>
+              {SOCIALS.map(s => (
+                <SocialButton
+                  key={s.id}
+                  label={s.label}
+                  Icon={s.Icon}
+                  color={s.color}
+                  bg={s.bg}
+                  loading={loadingId === s.id}
+                  disabled={!!loadingId}
+                  onClick={() => handleSocial(s.id)}
+                />
+              ))}
+
+              {showTelegramWidget && (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col items-center gap-3">
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xs text-white/50">Sign in with Telegram</span>
+                    <button
+                      onClick={() => setShowTelegramWidget(false)}
+                      className="text-white/40 hover:text-white"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div ref={telegramContainerRef} />
+                  <p className="text-[11px] text-white/30 text-center">
+                    Telegram will open its own secure window to verify your account.
+                  </p>
+                </div>
+              )}
+
+              {/* Passkey */}
+              <button
+                onClick={() => handleSocial("passkey")}
+                disabled={!!loadingId}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  "text-white/80 hover:text-white",
+                  "border border-white/10 hover:border-white/20 hover:bg-white/5",
+                  loadingId === "passkey" && "opacity-60 pointer-events-none",
+                )}
+              >
+                <span
+                  className="h-8 w-8 rounded-lg flex items-center justify-center"
+                  style={{ background: "rgba(255,255,255,0.06)" }}
+                >
+                  {loadingId === "passkey"
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <Fingerprint className="h-4 w-4" />}
+                </span>
+                <span className="flex-1 text-left">Passkey</span>
+                <ChevronRight className="h-4 w-4 opacity-30" />
+              </button>
+
+              {/* PIN notice — shown while any social login is in progress */}
+              {loadingId && loadingId !== "passkey" && (
+                <div
+                  className="flex items-start gap-2 px-3 py-2.5 rounded-xl"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <Shield className="h-3.5 w-3.5 text-white/30 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-white/35 leading-relaxed">
+                    You'll set a transaction PIN right after connecting to protect your funds.
+                  </p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {!hasEthereum ? (
+                <div className="text-center py-8">
+                  <div
+                    className="h-12 w-12 rounded-xl flex items-center justify-center mx-auto mb-3"
+                    style={{ background: "rgba(255,255,255,0.05)" }}
+                  >
+                    <span className="text-2xl">🔍</span>
+                  </div>
+                  <p className="text-sm text-white/50 font-medium">No wallet detected</p>
+                  <p className="text-xs text-white/30 mt-1.5 leading-relaxed">
+                    Install MetaMask, Rabby, or another browser wallet,<br />then refresh this page.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={() =>
+                    handleExternalWallet({
+                      name:     "Browser Wallet",
+                      icon:     "🌐",
+                      provider: (window as any).ethereum,
+                    })
+                  }
+                  disabled={!!loadingId}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                    "text-white/80 hover:text-white",
+                    "border border-white/10 hover:border-white/20 hover:bg-white/5",
+                    loadingId === "Browser Wallet" && "opacity-60 pointer-events-none",
+                  )}
+                >
+                  <span
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-xl"
+                    style={{ background: "rgba(255,255,255,0.06)" }}
+                  >
+                    {loadingId === "Browser Wallet"
+                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                      : "🌐"}
+                  </span>
+                  <span className="flex-1 text-left">Connect Wallet</span>
+                  <ChevronRight className="h-4 w-4 opacity-30" />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-5 flex items-center gap-2">
+          <Shield className="h-3 w-3 text-white/20 shrink-0" />
+          <p className="text-[11px] text-white/25 leading-tight">
+            Social logins create a self-custodial wallet secured by a transaction PIN.
+          </p>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SocialButton({
+  label, Icon, color, bg, loading, disabled, onClick,
+}: {
+  label:    string
+  Icon:     (props: { className?: string }) => JSX.Element
+  color:    string
+  bg:       string
+  loading:  boolean
+  disabled: boolean
+  onClick:  () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+        "border hover:scale-[1.01] active:scale-[0.99]",
+        loading || disabled ? "opacity-60 pointer-events-none" : "cursor-pointer",
+      )}
+      style={{ color, borderColor: color + "30", background: bg }}
+    >
+      <span
+        className="h-8 w-8 rounded-lg flex items-center justify-center"
+        style={{ background: color + "18" }}
+      >
+        {loading
+          ? <Loader2 className="h-4 w-4 animate-spin" />
+          : <Icon className="h-4 w-4" />}
+      </span>
+      <span className="flex-1 text-left" style={{ color: "rgba(255,255,255,0.85)" }}>
+        Continue with {label}
+      </span>
+      <ChevronRight className="h-4 w-4 opacity-30" />
+    </button>
+  )
+}
