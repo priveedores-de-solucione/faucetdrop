@@ -4,8 +4,8 @@
 
 import { toast } from "sonner";
 
-const API_BASE_URL = "https://faucetdrops-backend.vercel.app";
-const VERIFIER_API_URL = "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = "https://faucetdrops-backend.onrender.com";
+const VERIFIER_API_URL = "https://faucetdrops-backend.onrender.com";
 
 // ============================================
 // TYPE DEFINITIONS

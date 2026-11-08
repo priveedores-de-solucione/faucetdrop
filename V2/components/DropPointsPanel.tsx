@@ -74,7 +74,7 @@ const CHAIN_CONFIG: Record<
 
 const CHAIN_IDS = Object.keys(CHAIN_CONFIG).map(Number);
 
-const API_BASE_URL = "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = "https://faucetdrops-backend.onrender.com";
 
 // ─── ABI ──────────────────────────────────────────────────────────────────────
 

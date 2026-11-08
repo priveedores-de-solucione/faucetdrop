@@ -15,7 +15,7 @@ import { REDEEM_ABI } from "@/lib/abis";
 import { getChainConfig, CELO_CHAIN_ID, BOTCHAIN_CHAIN_ID, isSupportedChain, getEnabledChains, ensureChainNetwork } from "@/lib/chain";
 import { useProfileRoute } from "@/hooks/use-profile-route";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://faucetdrops-backend.onrender.com";
 
 interface LobbyChallenge {
   code: string; topic: string; stake_amount: number; token_symbol: string;

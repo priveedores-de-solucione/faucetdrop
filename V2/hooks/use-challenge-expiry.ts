@@ -13,7 +13,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ??
-  "https://faucetdrops-backend.vercel.app";
+  "https://faucetdrops-backend.onrender.com";
 
 export interface ExpiryData {
   /** Unix seconds when the window closes */

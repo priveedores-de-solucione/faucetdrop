@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Loading from "../loading/page";
 
-const API_BASE_URL = "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = "https://faucetdrops-backend.onrender.com";
 const DEFAULT_QUIZ_COVER = "/quiz.jpeg";
 
 interface QuizCard {

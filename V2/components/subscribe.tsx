@@ -12,7 +12,7 @@ import {
     AlertCircle, UserCircle2, ArrowRight, Twitter, ExternalLink
 } from "lucide-react"
 
-const API_BASE_URL = "https://faucetdrops-backend.vercel.app"
+const API_BASE_URL = "https://faucetdrops-backend.onrender.com"
 const COMPANY_WALLET = "0x97841b00B8Ad031FB30495eCeF2B2DbB6FCaCE30"
 
 const STABLECOINS: Record<number, { address: string; decimals: number; symbol: string }> = {

@@ -35,7 +35,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getChainConfig } from "@/lib/chain";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://faucetdrops-backend.onrender.com";
 const MIN_STAKE = 10;
 
 function getWsBase() {

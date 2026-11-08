@@ -56,7 +56,7 @@ async function redirectForSocialLink(provider: string): Promise<void> {
   })
   if (error) throw new Error(error.message)
 }
-      const API_BASE_URL = "https://faucetdrops-backend.vercel.app"
+      const API_BASE_URL = "https://faucetdrops-backend.onrender.com"
 
       // ─────────────────────────────────────────────────────────────────────────────
       // Types

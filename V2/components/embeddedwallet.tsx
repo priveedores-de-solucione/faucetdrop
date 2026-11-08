@@ -378,7 +378,7 @@ export function EmbeddedWalletControlProduction() {
             let backendData: BackendResponse | null = null
 
             try {
-                const response = await fetch(`https://faucetdrops-backend.vercel.app/api/wallet/balances/${chainId}/${currentAddress}`)
+                const response = await fetch(`https://faucetdrops-backend.onrender.com/api/wallet/balances/${chainId}/${currentAddress}`)
                 if (response.ok) {
                     backendData = await response.json()
                 }

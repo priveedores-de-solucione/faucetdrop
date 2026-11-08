@@ -7,7 +7,7 @@ import { useWallet as useSolanaWallet } from "@solana/wallet-adapter-react";
 // MUST match the backend that /dashboard/[username] resolves usernames against.
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ??
-  "https://faucetdrops-backend.vercel.app";
+  "https://faucetdrops-backend.onrender.com";
 
 const PLACEHOLDER_NAMES = new Set(["Dropee", "New User", "Anonymous"]);
 

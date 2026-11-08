@@ -28,7 +28,7 @@ import { getChainConfig, getEnabledChains, CELO_CHAIN_ID, isSupportedChain } fro
 // Config
 // ─────────────────────────────────────────────────────────────────────────────
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://faucetdrops-backend.onrender.com";
 
 
 

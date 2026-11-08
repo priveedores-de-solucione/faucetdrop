@@ -79,7 +79,7 @@ import { getAnchorWalletFromPrivy } from "@/lib/privy-solana-wallet"
 import { PublicKey } from "@solana/web3.js"
 import { BN } from "@coral-xyz/anchor"
 
-const API_BASE_URL = "https://faucetdrops-backend.vercel.app"; // <-- REPLACE WITH ACTUAL BACKEND URL
+const API_BASE_URL = "https://faucetdrops-backend.onrender.com"; // <-- REPLACE WITH ACTUAL BACKEND URL
 const SUPER_ADMIN_ADDRESS = "0xB4AC6CC4B18B0F09d24FAF947af3c47C86718fA2";
 // ============= TYPES =============
 export type VerificationType =

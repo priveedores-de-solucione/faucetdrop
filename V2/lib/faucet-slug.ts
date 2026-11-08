@@ -1,5 +1,5 @@
 
-const BACKEND = "https://faucetdrops-backend.vercel.app"
+const BACKEND = "https://faucetdrops-backend.onrender.com"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

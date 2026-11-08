@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Header } from '@/components/header';
 import { WalletConnectButton } from "@/components/wallet-connect";
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://faucetdrops-backend.vercel.app";
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://faucetdrops-backend.onrender.com";
 
 const CHAIN_NAMES: Record<number, string> = {
   42220: "Celo", 8453: "Base", 42161: "Arbitrum", 56: "BNB Chain", 1135: "Lisk",

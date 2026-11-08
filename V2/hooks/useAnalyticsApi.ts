@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const API_BASE_URL ='https://faucetdrops-backend.vercel.app'
+const API_BASE_URL ='https://faucetdrops-backend.onrender.com'
 
 interface AnalyticsResponse<T = any> {
   success: boolean

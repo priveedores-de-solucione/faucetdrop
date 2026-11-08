@@ -661,7 +661,7 @@ const FaucetAdminView: React.FC<FaucetAdminViewProps> = ({
 
       // 1. X post template (backend-stored for both chains)
       if (isTemplateChanged) {
-        const res = await fetch("https://faucetdrops-backend.vercel.app/faucet-x-template", {
+        const res = await fetch("https://faucetdrops-backend.onrender.com/faucet-x-template", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -690,7 +690,7 @@ const FaucetAdminView: React.FC<FaucetAdminViewProps> = ({
           }));
 
         if (formattedTasks.length > 0) {
-          const taskRes = await fetch("https://faucetdrops-backend.vercel.app/add-faucet-tasks", {
+          const taskRes = await fetch("https://faucetdrops-backend.onrender.com/add-faucet-tasks", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -743,7 +743,7 @@ const FaucetAdminView: React.FC<FaucetAdminViewProps> = ({
           );
 
           // Sync to backend DB for EVM
-          await fetch("https://faucetdrops-backend.vercel.app/set-claim-parameters", {
+          await fetch("https://faucetdrops-backend.onrender.com/set-claim-parameters", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -762,8 +762,8 @@ const FaucetAdminView: React.FC<FaucetAdminViewProps> = ({
         if (faucetType === "dropcode") {
           try {
             const codeEndpoint = onSolana
-              ? "https://faucetdrops-backend.vercel.app/solana/generate-new-drop-code"
-              : "https://faucetdrops-backend.vercel.app/generate-new-drop-code";
+              ? "https://faucetdrops-backend.onrender.com/solana/generate-new-drop-code"
+              : "https://faucetdrops-backend.onrender.com/generate-new-drop-code";
             const codeRes = await fetch(codeEndpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -887,7 +887,7 @@ const FaucetAdminView: React.FC<FaucetAdminViewProps> = ({
         if (!activeSolanaWallet) throw new Error("Solana wallet not connected");
         // Solana batch-reset: we need the list of claimers.
         // For now, call the backend which has the claimer list from its DB.
-        const res = await fetch("https://faucetdrops-backend.vercel.app/solana/reset-all-claims", {
+        const res = await fetch("https://faucetdrops-backend.onrender.com/solana/reset-all-claims", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1038,7 +1038,7 @@ const handleDeleteFaucet = async () => {
 
     // Always clean up backend metadata
     try {
-      await fetch("https://faucetdrops-backend.vercel.app/delete-faucet-metadata", {
+      await fetch("https://faucetdrops-backend.onrender.com/delete-faucet-metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1138,7 +1138,7 @@ const handleManageAdmin = async () => {
 
       if (onSolana) {
         const res = await fetch(
-          `https://faucetdrops-backend.vercel.app/solana/get-drop-code?faucetAddress=${encodeURIComponent(faucetAddress)}&userAddress=${encodeURIComponent(address)}&chainId=${SOLANA_CHAIN_ID}`
+          `https://faucetdrops-backend.onrender.com/solana/get-drop-code?faucetAddress=${encodeURIComponent(faucetAddress)}&userAddress=${encodeURIComponent(address)}&chainId=${SOLANA_CHAIN_ID}`
         );
         if (!res.ok) throw new Error("Failed to retrieve drop code");
         const data = await res.json();
@@ -1171,8 +1171,8 @@ const handleManageAdmin = async () => {
       setIsGeneratingNewCode(true);
 
       const endpoint = onSolana
-        ? "https://faucetdrops-backend.vercel.app/solana/generate-new-drop-code"
-        : "https://faucetdrops-backend.vercel.app/generate-new-drop-code";
+        ? "https://faucetdrops-backend.onrender.com/solana/generate-new-drop-code"
+        : "https://faucetdrops-backend.onrender.com/generate-new-drop-code";
 
       const res = await fetch(endpoint, {
         method: "POST",

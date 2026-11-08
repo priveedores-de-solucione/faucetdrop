@@ -102,7 +102,7 @@ interface UserProfileData {
 }
 
 export default function DashboardPage() {
-    const backendUrl = "https://faucetdrops-backend.vercel.app"; 
+    const backendUrl = "https://faucetdrops-backend.onrender.com"; 
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();

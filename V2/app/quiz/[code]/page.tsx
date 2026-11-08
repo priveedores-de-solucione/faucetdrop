@@ -75,7 +75,7 @@ function parseOnchainError(err: any): string {
   return raw.length > 120 ? raw.slice(0, 120) + "…" : raw;
 }
 
-const API_BASE_URL = "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = "https://faucetdrops-backend.onrender.com";
 const DEFAULT_QUIZ_COVER = "/quiz.jpeg";
 
 const CHAIN_RPC: Record<number, string> = {
@@ -88,10 +88,10 @@ const CHAIN_RPC: Record<number, string> = {
 };
 
 function getWsBaseUrl(): string {
-  if (typeof window === "undefined") return "wss://faucetdrops-backend.vercel.app";
+  if (typeof window === "undefined") return "wss://faucetdrops-backend.onrender.com";
   return window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
     ? "ws://127.0.0.1:8000"
-    : "wss://faucetdrops-backend.vercel.app";
+    : "wss://faucetdrops-backend.onrender.com";
 }
 
 // ── Types ──

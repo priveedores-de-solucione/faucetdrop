@@ -2,7 +2,7 @@ import { BrowserProvider } from 'ethers';
 
 import { FAUCET_ABI_CUSTOM } from './abis';
 
-const API_URL = "https://faucetdrops-backend.vercel.app";
+const API_URL = "https://faucetdrops-backend.onrender.com";
 const ENABLE_DIVVI_REFERRAL = true;
 const DEBUG_MODE = process.env.NODE_ENV === 'development';
 

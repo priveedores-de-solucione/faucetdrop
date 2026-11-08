@@ -18,7 +18,7 @@ import { WalletConnectButton } from "@/components/wallet-connect";
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 const ADMIN_WALLET = "0xB4AC6CC4B18B0F09d24FAF947af3c47C86718fA2";
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://faucetdrops-backend.vercel.app";
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://faucetdrops-backend.onrender.com";
 
 const CHAIN_EXPLORERS: Record<number, string> = {
   42220: "https://celoscan.io/tx/",

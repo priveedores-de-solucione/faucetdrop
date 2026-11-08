@@ -97,7 +97,7 @@ function parseOnchainError(err: any): string {
   const raw: string = err?.message || "Unknown error";
   return raw.length > 120 ? raw.slice(0, 120) + "…" : raw;
 }
-const API_BASE_URL = "https://faucetdrops-backend.vercel.app";
+const API_BASE_URL = "https://faucetdrops-backend.onrender.com";
 const DEFAULT_QUIZ_COVER = "/quiz.jpeg";
 
 interface QuizOption { id: "A" | "B" | "C" | "D"; text: string }

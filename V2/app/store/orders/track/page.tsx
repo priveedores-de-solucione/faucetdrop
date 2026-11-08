@@ -12,7 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://faucetdrops-backend.vercel.app";
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://faucetdrops-backend.onrender.com";
 
 const CHAIN_EXPLORERS: Record<number, string> = {
   42220: "https://celoscan.io/tx/",
