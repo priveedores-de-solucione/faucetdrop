@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 
 // ⚠️  Must match BotFather EXACTLY (no _bot suffix, exact capitalisation)
 // ⚠️  Domain serving this page must be registered via BotFather → /setdomain
-const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_LOGIN_BOT_USERNAME ?? "Wallet_infra_bot"
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? "FaucetDrop_Bot"
 
 export default function TelegramCallback() {
   const [status, setStatus] = useState<"waiting" | "done" | "error">("waiting")

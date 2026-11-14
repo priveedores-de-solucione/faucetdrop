@@ -534,7 +534,6 @@ export default function QuestDetailsPage() {
 const isProfileComplete = !!(
   userProfile?.username &&
   userProfile?.twitter_handle &&
-  userProfile?.telegram_handle &&
   userProfile?.email
 );
 
@@ -1313,7 +1312,7 @@ const handleRemoveAdmin = async (adminAddress: string) => {
     if (!selectedTask || !userWalletAddress) return;
     if (!isProfileComplete) {
   toast.error("Profile incomplete", {
-    description: "You must set a username and link your X (Twitter), Telegram, and Google accounts before completing tasks.",
+        description: "You must set a username and link your X (Twitter) and Google accounts before completing tasks.",
     action: {
       label: "Edit Profile",
       onClick: () => router.push(`/dashboard/${userWalletAddress}`),
@@ -3059,7 +3058,7 @@ const handleAdminWithdraw = async () => {
             onClick={() => {
               if (!isProfileComplete) {
                 toast.error("Profile incomplete", {
-                  description: "Link your X (Twitter), Telegram, and Google (Email) accounts before attempting tasks.",
+                  description: "Link your X (Twitter), and Google (Email) accounts before attempting tasks.",
                   action: {
                     label: "Edit Profile",
                     onClick: () => router.push(`/dashboard/${userProfile?.username || userWalletAddress}`),
