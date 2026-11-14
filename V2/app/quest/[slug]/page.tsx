@@ -12,6 +12,7 @@ import {
 import { useWallets } from '@privy-io/react-auth';
 import { getActiveSigner } from "@/lib/get-signer"
 import { QuestEditPanel } from "@/components/quest/questedit";
+import { createQuestReward } from "@/lib/faucet";
 import { QUEST_ABI } from "@/lib/abis";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -78,6 +79,13 @@ import {
 import { getAnchorWalletFromPrivy } from "@/lib/privy-solana-wallet"
 import { PublicKey } from "@solana/web3.js"
 import { BN } from "@coral-xyz/anchor"
+const QUEST_FACTORIES: Record<number, string> = {
+  42220: "0x2Eb9692785e089DD7588b0D3220B5dD154eF2699", // Celo
+  1135:  "0xE9a7637f11F22c55061936Bc97b9aFEAC2e93C2E", // Lisk
+  42161: "0x069ad2047FaEC364eb5009E8E783Ec1D9ae08629", // Arbitrum
+  8453:  "0xb0B955e9B4a98A1323cE099A97632D5c4fc5d210", // Base
+  56:    "0xBcA0AB3a9705C82DfBb92c4BAcFd5C2175511d54", // BNB
+};
 
 const API_BASE_URL = "https://faucetdrops-backend.onrender.com"; // <-- REPLACE WITH ACTUAL BACKEND URL
 const SUPER_ADMIN_ADDRESS = "0xB4AC6CC4B18B0F09d24FAF947af3c47C86718fA2";
@@ -1819,7 +1827,64 @@ const handleRemoveAdmin = async (adminAddress: string) => {
     setIsFunding(false)
   }
 }
- 
+const [isGoingLive, setIsGoingLive] = useState(false);
+
+const handleGoLive = async () => {
+  if (!userWalletAddress || !faucetAddress) { toast.error("Wallet not connected."); return; }
+  setIsGoingLive(true);
+  const toastId = "go-live";
+  const pendingKey = `go_live_${faucetAddress}`;
+
+  try {
+    // 1. Ask the backend what to deploy (also checks creator + subscription)
+    const infoRes = await fetch(
+      `${API_BASE_URL}/api/quests/${faucetAddress}/go-live?creatorAddress=${userWalletAddress}`
+    );
+    const info = await infoRes.json();
+    if (!infoRes.ok || !info.success) throw new Error(info.detail || "This quest cannot go live yet.");
+
+    const chain = Number(info.chainId);
+    const factory = QUEST_FACTORIES[chain];
+    if (!factory) throw new Error("Live quests are not supported on this quest's network yet.");
+
+    // 2. Deploy the quest contract — reuse one from an interrupted attempt
+    let deployedAddress: string | null = null;
+    try { deployedAddress = localStorage.getItem(pendingKey); } catch {}
+
+    if (!deployedAddress) {
+      toast.loading("Confirm the deployment in your wallet…", { id: toastId });
+      const signer = await getActiveSigner(chain);
+      if (!signer) throw new Error("Could not get signer — please re-login.");
+
+      deployedAddress = await createQuestReward(
+        signer as any,
+        factory,
+        String(info.title || "").trim(),
+        info.tokenAddress || ZeroAddress,
+        Number(info.endTimestamp) + 12 * 60 * 60,
+        Number(info.claimWindowHours)
+      );
+      try { localStorage.setItem(pendingKey, deployedAddress); } catch {}
+    }
+
+    // 3. Move the demo quest onto the new contract
+    toast.loading("Taking your quest live…", { id: toastId });
+    const res = await fetch(`${API_BASE_URL}/api/quests/${faucetAddress}/go-live`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ creatorAddress: userWalletAddress, deployedAddress }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.detail || "Could not take the quest live.");
+
+    try { localStorage.removeItem(pendingKey); } catch {}
+    toast.success("Your quest is live! You can now add tasks and fund it.", { id: toastId });
+    window.location.href = `/quest/${json.slug || deployedAddress}`;
+  } catch (e: any) {
+    toast.error(e?.reason || e?.shortMessage || e?.message || "Go live failed", { id: toastId });
+    setIsGoingLive(false);
+  }
+};
  // ─── FUND QUEST ──────────────────────────────────────────────────────────────
 const handleFundQuest = async () => {
   if (!faucetAddress) { toast.error("No quest address."); return; }
@@ -2328,9 +2393,20 @@ const handleAdminWithdraw = async () => {
                 </div>
 
                 {/* Admin Fund Button */}
+                {/* Admin Fund Button */}
                {isCreator && (isDemoQuest || !questData.isFunded) && (
   <div className="w-full md:w-auto shrink-0 mt-2 md:mt-0">
-  {isDemoQuest ? (
+  {isDemoQuest && hasActiveSubscription ? (
+    <Button
+      size="lg"
+      onClick={handleGoLive}
+      disabled={isGoingLive}
+      className="w-full bg-green-600 hover:bg-green-700 text-white shadow-lg font-bold"
+    >
+      {isGoingLive ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
+      {isGoingLive ? "Going live..." : "Deploy Quest to Go Live"}
+    </Button>
+  ) : isDemoQuest ? (
     <Button
       size="lg"
       onClick={() => setShowSubscribeModal(true)}
