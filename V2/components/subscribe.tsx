@@ -36,6 +36,7 @@ const PERKS = [
 
 interface UserProfile {
     username?: string
+    email?: string
     twitter_handle?: string
     discord_handle?: string
     telegram_handle?: string
@@ -44,12 +45,14 @@ interface UserProfile {
 
 /**
  * Returns true if the profile is considered "set up":
- * has a real username AND at least one social handle linked.
+ * has a real username AND at least one linked account
+ * (a linked email from Google, or a social handle).
  */
 function isProfileComplete(profile: UserProfile | null): boolean {
     if (!profile) return false
     const hasUsername = !!profile.username && profile.username !== "New User" && profile.username.trim() !== ""
     const hasSocial = !!(
+        profile.email ||
         profile.twitter_handle ||
         profile.discord_handle ||
         profile.telegram_handle ||
@@ -60,16 +63,23 @@ function isProfileComplete(profile: UserProfile | null): boolean {
 
 async function fetchUserProfile(walletAddress: string): Promise<UserProfile | null> {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/users/${walletAddress.toLowerCase()}?t=${Date.now()}`)
+        // /api/profile/{address} is the user_profiles endpoint.
+        // (/api/users/{address} is the old droplist endpoint and 404s here.)
+        const res = await fetch(
+            `${API_BASE_URL}/api/profile/${walletAddress.toLowerCase()}?t=${Date.now()}`,
+            { cache: "no-store" }
+        )
+        if (!res.ok) return null
         const data = await res.json()
-        const p = data.profile || (data.username ? data : null)
+        const p = data.profile
         if (!data.success || !p) return null
         return {
             username:          p.username,
-            twitter_handle:    p.twitter_handle  || p.twitterHandle,
-            discord_handle:    p.discord_handle  || p.discordHandle,
-            telegram_handle:   p.telegram_handle || p.telegramHandle,
-            farcaster_handle:  p.farcaster_handle|| p.farcasterHandle,
+            email:             p.email,
+            twitter_handle:    p.twitter_handle,
+            discord_handle:    p.discord_handle,
+            telegram_handle:   p.telegram_handle,
+            farcaster_handle:  p.farcaster_handle,
         }
     } catch {
         return null
@@ -136,11 +146,7 @@ export function SubscriptionModal({ open, onOpenChange, onSuccess, walletAddress
     const userWalletAddress = walletAddress || activeWallet?.address || privyUser?.wallet?.address || ""
 
     // ── Derive the dashboard URL for the current user ─────────────────────────
-    // If they have a username we'll link there; otherwise fall back to address route.
     const getDashboardUrl = () => {
-        // We don't have the profile in scope here, so we rely on address.
-        // After the profile gate shows we could enrich this, but the address route
-        // always works and redirects correctly in your app.
         if (!userWalletAddress) return "/dashboard"
         return `/dashboard/${userWalletAddress.toLowerCase()}`
     }
@@ -304,7 +310,7 @@ export function SubscriptionModal({ open, onOpenChange, onSuccess, walletAddress
                             <div className="flex gap-3 p-3.5 rounded-lg bg-amber-50 border border-amber-200">
                                 <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                                 <p className="text-sm text-amber-800 leading-snug">
-                                    Before subscribing, please set up your profile with a <strong>username</strong> and at least one <strong>social handle</strong>. This helps us verify your identity and link your subscription correctly.
+                                    Before subscribing, please set up your profile with a <strong>username</strong> and at least one <strong>linked account</strong>. This helps us verify your identity and link your subscription correctly.
                                 </p>
                             </div>
 
@@ -314,7 +320,7 @@ export function SubscriptionModal({ open, onOpenChange, onSuccess, walletAddress
                                     What you need
                                 </p>
                                 <ChecklistItem label="Set a username" />
-                                <ChecklistItem label="Link at least one social (X, Discord, Telegram, or Farcaster)" />
+                                <ChecklistItem label="Link at least one account (Google, X, Discord, Telegram, or Farcaster)" />
                             </div>
 
                             {/* CTA */}

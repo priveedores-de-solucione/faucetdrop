@@ -884,7 +884,9 @@ export function QuestEditPanel({
   const [newTaskDraft, setNewTaskDraft] = useState<EditableTask | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
   const [systemTaskCount, setSystemTaskCount] = useState(0);
-
+  const [hasReferralTask, setHasReferralTask] = useState(false);
+  const [referralRequiredTaskId, setReferralRequiredTaskId] = useState("none");
+  const [savedReferralRequiredTaskId, setSavedReferralRequiredTaskId] = useState("none");
   const defaultStageForNew = (): Stage => {
     if (tasks.length === 0) return "Beginner";
     return tasks[tasks.length - 1].stage ?? "Beginner";
@@ -922,6 +924,9 @@ export function QuestEditPanel({
           }));
           setTasks(mapped);
           setSystemTaskCount(json.systemTasksCount ?? 0);
+          setHasReferralTask(!!json.hasReferralTask);
+          setReferralRequiredTaskId(json.referralRequiredTaskId ?? "none");
+          setSavedReferralRequiredTaskId(json.referralRequiredTaskId ?? "none");
         } else {
           toast.error("Could not load tasks");
         }
@@ -1120,7 +1125,13 @@ const startEditing = (id: string) => {
 };
 
   const handleEditSave = (updated: EditableTask) => { setTasks((p) => p.map((t) => (t.id === updated.id ? updated : t))); setEditingTaskId(null); toast.success("Task updated — click Save All Tasks to persist"); };
-  const deleteTask = (id: string) => { setTasks((p) => p.filter((t) => t.id !== id)); setDeleteCandidate(null); if (editingTaskId === id) setEditingTaskId(null); toast.success("Task removed"); };
+    const deleteTask = (id: string) => {
+    setTasks((p) => p.filter((t) => t.id !== id));
+    setDeleteCandidate(null);
+    if (editingTaskId === id) setEditingTaskId(null);
+    if (referralRequiredTaskId === id) setReferralRequiredTaskId("none");
+    toast.success("Task removed");
+  };
   
   const moveTask = (index: number, direction: "up" | "down") => {
     setTasks((prev) => {
@@ -1142,7 +1153,11 @@ const startEditing = (id: string) => {
       const res = await fetch(`${API_BASE_URL}/api/quests/${faucetAddress}/tasks`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminAddress: creatorAddress, tasks: tasks.map(({ _isDirty, _isNew, ...t }) => t) }),
+                body: JSON.stringify({
+          adminAddress: creatorAddress,
+          tasks: tasks.map(({ _isDirty, _isNew, ...t }) => t),
+          referralRequiredTaskId,
+        }),
       });
       const json = await res.json();
       if (json.success) {
@@ -1156,8 +1171,8 @@ const startEditing = (id: string) => {
     finally { setIsSavingTasks(false); }
   };
 
-  const hasDirtyTasks = tasks.some((t) => t._isDirty || t._isNew) || addingNew;
-  const metaChanged = metaTitle.trim() !== (questData?.title ?? "").trim() || metaImage.trim() !== (questData?.imageUrl ?? "").trim();
+  const referralChanged = referralRequiredTaskId !== savedReferralRequiredTaskId;
+  const hasDirtyTasks = tasks.some((t) => t._isDirty || t._isNew) || addingNew || referralChanged;  const metaChanged = metaTitle.trim() !== (questData?.title ?? "").trim() || metaImage.trim() !== (questData?.imageUrl ?? "").trim();
 
   return (
     <div className="space-y-8">
@@ -1325,19 +1340,44 @@ const startEditing = (id: string) => {
           )}
         </CardContent>
 
+                {!isFetchingTasks && hasReferralTask && (
+          <div className="border-t border-slate-100 dark:border-slate-800 px-6 py-4 space-y-2 bg-white dark:bg-slate-950">
+            <Label className="text-sm font-semibold">Compulsory task for referrals</Label>
+            <p className="text-xs text-muted-foreground">
+              A referred friend must complete this task before the referrer earns referral points.
+            </p>
+            <Select
+              value={referralRequiredTaskId}
+              onValueChange={setReferralRequiredTaskId}
+              disabled={isDemoQuest}
+            >
+              <SelectTrigger className="h-10 max-w-md bg-white dark:bg-slate-950">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None — points on join</SelectItem>
+                {tasks.filter((t) => t.title.trim()).map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.title} ({t.stage})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {!isFetchingTasks && (
           <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-between items-center bg-white dark:bg-slate-950 rounded-b-xl">
             <p className="text-sm font-medium text-muted-foreground">
               Total: {tasks.length} User Tasks
             </p>
-            <Button onClick={handleSaveTasks} disabled={isSavingTasks || (tasks.every((t) => !t._isDirty && !t._isNew) && !addingNew)} className="min-w-[160px] shadow-md">
+            <Button onClick={handleSaveTasks} disabled={isSavingTasks || !hasDirtyTasks} className="min-w-[160px] shadow-md">
               {isSavingTasks ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Save Task Layout
             </Button>
           </CardFooter>
         )}
       </Card>
-
       {/* ── Delete confirmation ── */}
       <AlertDialog open={!!deleteCandidate} onOpenChange={(open) => !open && setDeleteCandidate(null)}>
         <AlertDialogContent>
